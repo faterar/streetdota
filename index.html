@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="Регистрация команды на турнир Street Dota по Dota 2.">
+<title>Street Dota — регистрация команды</title>
+<style>
+  :root {
+    --bg: #0b0d10;
+    --panel: #131820;
+    --panel-2: #0f1319;
+    --line: #252c36;
+    --text: #e9edf2;
+    --muted: #8d97a4;
+    --accent: #ff7043;
+    --accent-ring: rgba(255, 112, 67, .22);
+    --bad: #ff7361;
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1100px 520px at 84% -20%, rgba(255, 112, 67, .14), transparent 62%),
+      var(--bg);
+    color: var(--text);
+    font: 16px/1.55 "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .wrap {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 40px 20px 72px;
+  }
+
+  .hero { padding-bottom: 24px; margin-bottom: 26px; border-bottom: 1px solid var(--line); }
+  .hero::before {
+    content: "";
+    display: block;
+    width: 46px;
+    height: 3px;
+    margin-bottom: 18px;
+    background: var(--accent);
+    border-radius: 99px;
+  }
+  .eyebrow { margin: 0 0 10px; color: var(--muted); font-size: 14px; }
+  h1 {
+    margin: 0 0 12px;
+    font-size: clamp(30px, 5vw, 44px);
+    line-height: 1.08;
+    letter-spacing: -.025em;
+    font-weight: 700;
+  }
+  .card, .player {
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 14px;
+  }
+
+  .field { display: grid; gap: 6px; min-width: 0; }
+  .field label { font-size: 13px; font-weight: 600; color: var(--muted); }
+  input {
+    width: 100%;
+    padding: 11px 13px;
+    background: #0b0f14;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--text);
+    font: inherit;
+    font-size: 15px;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  input::placeholder { color: #5c6672; }
+  input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-ring);
+  }
+  input[aria-invalid="true"] { border-color: var(--bad); }
+  input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px rgba(255, 115, 97, .2); }
+
+  .err { margin: 0; font-size: 12.5px; line-height: 1.35; color: var(--bad); }
+  .err:empty { display: none; }
+
+  .player-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .num {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    flex: none;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #1b222b;
+    color: var(--muted);
+    font: 600 14px/1 ui-monospace, Consolas, "Courier New", monospace;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .player[data-filled="true"] .num {
+    background: #1d2b22;
+    border-color: #35543f;
+    color: #8fe0ad;
+  }
+  .player-head h2 { margin: 0; font-size: 16px; font-weight: 600; }
+  .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+
+  .progress {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 4px 0 20px;
+    font-size: 13.5px;
+    color: var(--muted);
+  }
+  .bar { flex: 1; height: 4px; border-radius: 99px; background: #1a2028; overflow: hidden; }
+  .bar span { display: block; width: 0; height: 100%; background: var(--accent); transition: width .2s; }
+  #progress-label { min-width: 4.5em; text-align: right; font-variant-numeric: tabular-nums; }
+
+  .form-error {
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border-left: 3px solid var(--bad);
+    background: rgba(255, 115, 97, .08);
+    border-radius: 0 10px 10px 0;
+    font-size: 14px;
+    color: #ffb3a9;
+  }
+
+  .actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .note { margin: 0; max-width: 44ch; font-size: 13px; color: var(--muted); }
+
+  .btn {
+    appearance: none;
+    border: 0;
+    border-radius: 11px;
+    padding: 13px 26px;
+    font: inherit;
+    font-size: 15.5px;
+    font-weight: 650;
+    cursor: pointer;
+    transition: filter .15s, background .15s, border-color .15s;
+  }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-primary { background: var(--accent); color: #180b06; }
+  .btn-primary:hover:not(:disabled) { filter: brightness(1.07); }
+  .btn-primary:active:not(:disabled) { transform: translateY(1px); }
+  .btn-primary:disabled { opacity: .62; cursor: progress; }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--line);
+    font-weight: 600;
+  }
+  .btn-ghost:hover { border-color: #3a4350; background: #161b22; }
+
+  .done { border-left: 3px solid var(--accent); }
+  .done h2 { margin: 0 0 8px; font-size: 22px; letter-spacing: -.01em; }
+  .done p { margin: 0 0 18px; color: var(--muted); max-width: 56ch; }
+  .done-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 26px 16px 56px; }
+    .fields { grid-template-columns: 1fr; }
+    .card, .player { padding: 16px; }
+    .actions .btn { width: 100%; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; }
+  }
+
+  .rules { padding: 0; }
+  .rules summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 20px;
+    list-style: none;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 650;
+    border-radius: var(--radius);
+  }
+  .rules summary::-webkit-details-marker { display: none; }
+  .rules summary::after {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
+    transform: rotate(45deg);
+    transition: transform .15s;
+  }
+  .rules[open] summary::after { transform: rotate(-135deg); }
+  .rules summary:hover::after { border-color: var(--accent); }
+  .rules summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .rules-body { padding: 0 20px 18px; color: var(--muted); }
+  .rules-body:empty { padding: 0; }
+  .rules-body p { margin: 0 0 14px; }
+  .rules-body a { color: var(--accent); text-decoration: none; overflow-wrap: anywhere; }
+  .rules-body a:hover { text-decoration: underline; }
+  .rules-body ol { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Регистрация команды</p>
+    <h1>Street Dota</h1>
+  </header>
+
+  <details class="card rules">
+    <summary>Правила!</summary>
+    <div class="rules-body">
+      <p><a href="https://discord.gg/n3rVjzpDZ" target="_blank" rel="noopener">Ссылка на дискорд сервер (https://discord.gg/n3rVjzpDZ)</a></p>
+      <ol>
+        <li>Запрещено использование читов и сторонних программ.</li>
+        <li>Запрещён обман в любом его виде (MMR, игра не со своего аккаунта и т.д.).</li>
+        <li>При подозрениях в нечестной игре администрация вправе провести проверку.</li>
+        <li>Общее количество MMR на команду не должно превышать 20 000.</li>
+        <li>У каждой команды есть право на паузы общей длительностью 15 минут.</li>
+        <li>Участники вправе договариваться о времени проведения игры.</li>
+        <li>Запрещено задерживать игру более чем на сутки.</li>
+        <li>После договора о времени проведения участники обязаны проинформировать об этом организаторов.</li>
+        <li>Участники обязаны зайти на дискорд сервер турнира.</li>
+      </ol>
+    </div>
+  </details>
+
+  <form id="reg" novalidate>
+    <div class="card team">
+      <div class="field">
+        <label for="team">Название команды</label>
+        <input id="team" name="team" type="text" placeholder="например, Team Spirit"
+               autocomplete="off" spellcheck="false" required aria-describedby="team-err">
+        <p class="err" id="team-err"></p>
+      </div>
+    </div>
+
+    <div id="players"></div>
+
+    <div class="progress">
+      <span>Заполнено игроков</span>
+      <span class="bar"><span id="progress-fill"></span></span>
+      <span id="progress-label">0 из 5</span>
+    </div>
+
+    <p class="form-error" id="form-error" role="alert" hidden></p>
+
+    <div class="actions">
+      <p class="note">Нажимая «Отправить заявку», вы передаёте данные организатору турнира.</p>
+      <button class="btn btn-primary" id="submit" type="submit">Отправить заявку</button>
+    </div>
+  </form>
+
+  <section class="card done" id="done" hidden aria-live="polite">
+    <h2>Заявка отправлена</h2>
+    <p id="done-text"></p>
+    <div class="done-actions">
+      <button class="btn btn-ghost" id="copy" type="button">Скопировать заявку</button>
+      <button class="btn btn-ghost" id="again" type="button">Заполнить ещё одну</button>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var ENDPOINT = "https://script.google.com/macros/s/AKfycbwPaT4uWHukuHGu5N3yIsVIQwoH2j4mVdUVWlEiE4LC3uYzY9QiAcfq-Jatdg4lD2aw/exec";
+
+  var PLAYER_COUNT = 5;
+
+  var PLAYER_FIELDS = [
+    { key: "steam", label: "Steam", inputmode: "url", placeholder: "steamcommunity.com/id/nick" },
+    { key: "tg", label: "Telegram", inputmode: "text", placeholder: "@nickname" },
+    { key: "db", label: "Dotabuff", inputmode: "url", placeholder: "dotabuff.com/players/12345678" },
+    { key: "mmr", label: "MMR", inputmode: "numeric", placeholder: "6500" }
+  ];
+
+  var form = document.getElementById("reg");
+  var playersBox = document.getElementById("players");
+  var teamInput = document.getElementById("team");
+  var formError = document.getElementById("form-error");
+  var submitBtn = document.getElementById("submit");
+  var donePanel = document.getElementById("done");
+  var doneText = document.getElementById("done-text");
+  var copyBtn = document.getElementById("copy");
+  var againBtn = document.getElementById("again");
+  var progressLabel = document.getElementById("progress-label");
+  var progressFill = document.getElementById("progress-fill");
+
+  var lastPayload = null;
+
+  function clean(value) {
+    return String(value == null ? "" : value).replace(/\s+/g, " ").trim();
+  }
+
+  function asUrl(value) {
+    var s = clean(value);
+    if (!s) return null;
+    try {
+      return new URL(/^[a-z]+:\/\//i.test(s) ? s : "https://" + s);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function normalizeLink(value) {
+    if (/^[a-z]+:\/\//i.test(value)) return value;
+    if (/^\S+\.\S+$/.test(value)) return "https://" + value;
+    return value;
+  }
+
+  function normalize(key, value) {
+    var s = clean(value);
+    if (!s) return "";
+
+    if (key === "tg") {
+      var nick = s.replace(/^(https?:\/\/)?(www\.)?(t\.me|telegram\.me)\//i, "").replace(/^@/, "");
+      return /^[a-z0-9_]{4,32}$/i.test(nick) ? "@" + nick : s;
+    }
+
+    if (key === "mmr") {
+      var digits = s.replace(/[\s\u00a0]/g, "");
+      return /^\d{1,6}$/.test(digits) ? digits : "";
+    }
+
+    var url = asUrl(s);
+    if (url && key === "steam" && /(^|\.)steamcommunity\.com$/i.test(url.hostname)) {
+      return "https://steamcommunity.com" + url.pathname.replace(/\/+$/, "");
+    }
+    if (url && key === "db" && /(^|\.)dotabuff\.com$/i.test(url.hostname)) {
+      var match = url.pathname.match(/^\/players\/(\d+)/);
+      if (match) return "https://www.dotabuff.com/players/" + match[1];
+    }
+    return normalizeLink(s);
+  }
+
+  function fieldMessage(key) {
+    return key === "mmr" ? "MMR — только цифры, например 6500" : "Заполните поле";
+  }
+
+  playersBox.innerHTML = Array.from({ length: PLAYER_COUNT }, function (_, i) {
+    var n = i + 1;
+    return '<div class="player" role="group" aria-labelledby="p' + n + '-head">' +
+      '<div class="player-head"><span class="num" aria-hidden="true">' + n + '</span>' +
+      '<h2 id="p' + n + '-head">Игрок ' + n + '</h2></div>' +
+      '<div class="fields">' +
+      PLAYER_FIELDS.map(function (f) {
+        var id = "p" + n + "-" + f.key;
+        return '<div class="field">' +
+          '<label for="' + id + '">' + f.label + '</label>' +
+          '<input id="' + id + '" name="p' + n + '_' + f.key + '" type="text" inputmode="' + f.inputmode +
+          '" placeholder="' + f.placeholder + '" autocomplete="off" autocapitalize="off" spellcheck="false" required aria-describedby="' + id + '-err">' +
+          '<p class="err" id="' + id + '-err"></p>' +
+          '</div>';
+      }).join("") +
+      '</div></div>';
+  }).join("");
+
+  function fieldEl(n, key) {
+    return document.getElementById("p" + n + "-" + key);
+  }
+
+  function setError(el, message) {
+    el.setAttribute("aria-invalid", "true");
+    var box = document.getElementById(el.id + "-err");
+    if (box) box.textContent = message;
+  }
+
+  function clearError(el) {
+    el.removeAttribute("aria-invalid");
+    var box = document.getElementById(el.id + "-err");
+    if (box) box.textContent = "";
+  }
+
+  function updateProgress() {
+    var filled = 0;
+    for (var n = 1; n <= PLAYER_COUNT; n++) {
+      var ok = PLAYER_FIELDS.every(function (f) {
+        return normalize(f.key, fieldEl(n, f.key).value) !== "";
+      });
+      if (ok) filled++;
+      playersBox.children[n - 1].dataset.filled = String(ok);
+    }
+    progressLabel.textContent = filled + " из " + PLAYER_COUNT;
+    progressFill.style.width = (filled / PLAYER_COUNT) * 100 + "%";
+  }
+
+  function readForm() {
+    var errors = [];
+    var data = { team: clean(teamInput.value) };
+
+    if (data.team.length < 2) {
+      errors.push({ el: teamInput, message: "Укажите название команды" });
+    }
+
+    for (var n = 1; n <= PLAYER_COUNT; n++) {
+      for (var i = 0; i < PLAYER_FIELDS.length; i++) {
+        var f = PLAYER_FIELDS[i];
+        var el = fieldEl(n, f.key);
+        var value = normalize(f.key, el.value);
+        data["p" + n + "_" + f.key] = value || clean(el.value);
+        if (!value) errors.push({ el: el, message: fieldMessage(f.key) });
+      }
+    }
+
+    return { data: data, errors: errors };
+  }
+
+  function applicationText(data) {
+    var lines = ["Заявка на турнир по Dota 2", "Команда: " + data.team];
+    for (var n = 1; n <= PLAYER_COUNT; n++) {
+      lines.push("Игрок " + n + " — Steam: " + data["p" + n + "_steam"] +
+        ", Telegram: " + data["p" + n + "_tg"] +
+        ", Dotabuff: " + data["p" + n + "_db"] +
+        ", MMR: " + data["p" + n + "_mmr"]);
+    }
+    return lines.join("\n");
+  }
+
+  function showDone(data) {
+    lastPayload = data;
+    doneText.textContent = "Команда «" + data.team + "» зарегистрирована. " +
+      "Если организатор не подтвердит заявку в течение пары минут, скопируйте её и отправьте ему в Telegram.";
+    form.hidden = true;
+    donePanel.hidden = false;
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    donePanel.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
+  }
+
+  async function send(data) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Отправляем…";
+    formError.hidden = true;
+
+    try {
+      await fetch(ENDPOINT, { method: "POST", mode: "no-cors", body: new URLSearchParams(data) });
+      showDone(data);
+    } catch (e) {
+      formError.hidden = false;
+      formError.textContent = "Не удалось отправить заявку: проверьте интернет и нажмите «Отправить заявку» ещё раз.";
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Отправить заявку";
+    }
+  }
+
+  form.addEventListener("input", function (event) {
+    if (event.target.matches("input")) clearError(event.target);
+    updateProgress();
+  });
+
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    var result = readForm();
+    [teamInput].concat(Array.prototype.slice.call(form.querySelectorAll("input[id^='p']"))).forEach(clearError);
+
+    if (result.errors.length) {
+      result.errors.forEach(function (item) { setError(item.el, item.message); });
+      formError.hidden = false;
+      formError.textContent = "Проверьте отмеченные поля — заявка не отправлена.";
+      result.errors[0].el.focus();
+      return;
+    }
+
+    if (!ENDPOINT) {
+      formError.hidden = false;
+      formError.textContent = "Форма ещё не подключена к таблице. Организатору нужно вставить ссылку на веб-приложение Google Apps Script в переменную ENDPOINT.";
+      return;
+    }
+
+    formError.hidden = true;
+    send(result.data);
+  });
+
+  copyBtn.addEventListener("click", async function () {
+    var text = applicationText(lastPayload);
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (e) {
+      var area = document.createElement("textarea");
+      area.value = text;
+      area.style.position = "fixed";
+      area.style.opacity = "0";
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand("copy");
+      area.remove();
+    }
+    copyBtn.textContent = "Скопировано";
+    setTimeout(function () { copyBtn.textContent = "Скопировать заявку"; }, 2000);
+  });
+
+  againBtn.addEventListener("click", function () {
+    form.reset();
+    form.querySelectorAll("input").forEach(clearError);
+    formError.hidden = true;
+    lastPayload = null;
+    updateProgress();
+    donePanel.hidden = true;
+    form.hidden = false;
+    teamInput.focus();
+    window.scrollTo({ top: 0, behavior: "auto" });
+  });
+
+  updateProgress();
+})();
+</script>
+</body>
+</html>
